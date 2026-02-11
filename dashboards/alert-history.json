@@ -1,0 +1,191 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      },
+      {
+        "datasource": { "uid": "$datasource_loki" },
+        "enable": true,
+        "iconColor": "#96d98d",
+        "name": "Flux Deployments",
+        "expr": "{namespace=\"flux-system\"} | reason=\"ReconciliationSucceeded\" or reason=\"ArtifactUpdate\""
+      },
+      {
+        "datasource": { "uid": "$datasource_loki" },
+        "enable": true,
+        "iconColor": "#ff7383",
+        "name": "Flux Errors",
+        "expr": "{namespace=\"flux-system\"} | reason=\"ReconciliationFailed\" or severity=\"error\""
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "type": "state-timeline",
+      "title": "Alert Timeline",
+      "datasource": {
+        "uid": "$datasource_prom"
+      },
+      "targets": [
+        {
+          "expr": "ALERTS{alertname=~\"$alertname\", alertname!~\"InfoInhibitor|Watchdog\", alertstate=\"firing\"}",
+          "format": "time_series",
+          "legendFormat": "{{alertname}} / {{pod}} - {{severity}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "gray"
+          },
+          "custom": {
+            "showValue": "never",
+            "fillOpacity": 80
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "/.* - critical$/" 
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "/.* - warning$/"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 14,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "alignValue": "left",
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "mergeValues": true,
+        "rowHeight": 0.85,
+        "showValue": "never",
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "type": "logs",
+      "title": "Alert Logs (Namespace: $namespace | Search: $alertname)",
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 24,
+        "h": 14
+      },
+      "datasource": {
+        "uid": "$datasource_loki"
+      },
+      "targets": [
+        {
+          "expr": "{namespace=~\"$namespace\"} | pod=~\".*\" |~ \"$alertname\"",
+          "legendFormat": "Logs"
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "sortOrder": "Descending"
+      }
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "datasource_prom",
+        "type": "datasource",
+        "query": "prometheus",
+        "label": "Prometheus"
+      },
+      {
+        "name": "datasource_loki",
+        "type": "datasource",
+        "query": "loki",
+        "label": "Loki"
+      },
+      {
+        "name": "alertname",
+        "type": "query",
+        "datasource": {
+          "uid": "$datasource_prom"
+        },
+        "definition": "label_values(ALERTS, alertname)",
+        "query": "label_values(ALERTS, alertname)",
+        "includeAll": true,
+        "multi": true,
+        "refresh": 1
+      },
+      {
+        "name": "namespace",
+        "type": "query",
+        "datasource": {
+          "uid": "$datasource_prom"
+        },
+        "definition": "label_values(ALERTS, namespace)",
+        "query": "label_values(ALERTS, namespace)",
+        "includeAll": true,
+        "multi": true,
+        "label": "Namespace",
+        "refresh": 1,
+        "sort": 1
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "schemaVersion": 38,
+  "title": "Alert History",
+  "uid": "alert-history",
+  "version": 1
+}

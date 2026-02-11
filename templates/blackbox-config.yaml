@@ -1,0 +1,44 @@
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: host-availability-check
+  labels:
+    release: {{ .Release.Name }}
+spec:
+  jobName: host-status-check
+  interval: 1m
+  module: http_2xx
+  prober:
+    url: {{ .Release.Name }}-prometheus-blackbox-exporter:9115
+  targets:
+    staticConfig:
+      static:
+        - "https://monitoring.ludicdrive.com"  # replace and add your hosts
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: blackbox-alerts
+  labels:
+    release: {{ .Release.Name }}
+spec:
+  groups:
+  - name: blackbox.rules
+    rules:
+    - alert: HostDown
+      expr: probe_success == 0
+      for: 3m
+      labels:
+        severity: critical
+      annotations:
+        summary: 'Host  {{ "{{" }} $labels.instance {{ "}}" }} not reachable'
+        description: 'Blackbox-Check for  {{ "{{" }} $labels.instance {{ "}}" }} has failed for 3 minutes.'
+    - alert: SSLCertExpiringSoon
+      expr: (probe_ssl_earliest_cert_expiry - time()) < (3 * 24 * 3600) # 3 days
+      for: 1h
+      labels:
+        severity: warning
+      annotations:
+        summary: "Cert for {{ "{{" }} $labels.instance {{ "}}" }}"
+        description: "The SSL-Cert for {{ "{{" }} $labels.instance {{ "}}" }} is expiring in less than 3 days. Check cert-manager!"
+

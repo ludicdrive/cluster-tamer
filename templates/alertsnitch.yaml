@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alertsnitch
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alertsnitch
+  template:
+    metadata:
+      labels:
+        app: alertsnitch
+    spec:
+      containers:
+      - name: alertsnitch
+        image: mikehsu0618/alertsnitch:latest # Fork with Loki support
+        env:
+        - name: ALERTSNITCH_BACKEND
+          value: "loki"
+        - name: ALERTSNITCH_BACKEND_ENDPOINT
+          value: "http://{{ .Release.Name }}-loki-gateway.{{ .Release.Namespace }}.svc.cluster.local"
+        ports:
+        - containerPort: 9567
+          name: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertsnitch
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app: alertsnitch
+  ports:
+  - port: 9567
+    targetPort: 9567

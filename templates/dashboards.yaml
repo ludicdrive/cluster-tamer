@@ -1,0 +1,11 @@
+{{- if index .Values "kube-prometheus-stack" "grafana" "enabled" }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  labels:
+    grafana_dashboard: "1"
+data:
+  alert-history.json: |
+    {{- .Files.Get "dashboards/alert-history.json" | nindent 4 }}
+{{- end }}

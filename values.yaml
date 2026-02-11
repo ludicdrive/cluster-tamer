@@ -1,0 +1,543 @@
+# https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/values.yaml
+k8s-monitoring:
+  cluster:
+    name: my-cluster
+  clusterMetrics:
+    enabled: true
+    kepler:
+      enabled: false
+    node-exporter:  # linux nodes, covered by kube-prometheus-stack
+      enabled: true
+      deploy: false
+    windows-exporter:
+      enabled: false
+      deploy: false
+    opencost:
+      enabled: true
+      metricsSource: prometheus
+      service:
+        labels:
+          release: ${release_name}
+      # https://github.com/opencost/opencost-helm-chart/blob/main/charts/opencost/values.yaml
+      opencost:
+        exporter:
+          defaultClusterId: my-cluster
+        metrics:
+          serviceMonitor:
+            enabled: true
+            additionalLabels:
+              release: ${release_name}
+        # static prices for custom provider
+        customPricing:
+          enabled: true
+          provider: custom
+          costModel:
+            # costs per unit/h
+            CPU: 0.00109  # e.g: 0,59125€ / 730h
+            RAM: 0.00043  # e.g: 0,59125€ / 730h
+            storage: 0.0000076   # cost per GB-h
+            GPU: 0          # usually 0 on standard server without gpu
+            zoneNetworkEgress: 0
+            regionNetworkEgress: 0
+            internetNetworkEgress: 0
+        currencyCode: "EUR"
+        prometheus:
+          external:
+            enabled: true
+            url: http://${release_name}-kube-prometheus-stack-prometheus:9090
+        
+  clusterEvents:
+    enabled: true
+  nodeLogs:
+    enabled: true
+  podLogs:
+    enabled: true
+  alloy-metrics:
+    enabled: true
+    alloy:
+      resources:
+        requests:
+          cpu: 20m
+          memory: 650Mi
+        limits:
+          cpu: 300m
+          memory: 2Gi
+  alloy-singleton:
+    enabled: true
+    alloy:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 60Mi
+        limits:
+          cpu: 20m
+          memory: 100Mi
+  alloy-logs:
+    enabled: true
+    alloy:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 100Mi
+        limits:
+          cpu: 20m
+          memory: 150Mi
+  alloy-profiles:
+    enabled: true
+  alloy-receiver:
+    enabled: true
+    alloy:
+      extraPorts:
+        - name: faro
+          port: 12347
+          targetPort: 12347
+          protocol: TCP
+        - name: otlp-grpc
+          port: 4317
+          targetPort: 4317
+          protocol: TCP
+        - name: otlp-http
+          port: 4318
+          targetPort: 4318
+          protocol: TCP
+        - name: profiles
+          port: 4040
+          targetPort: 4040
+          protocol: TCP
+  applicationObservability:
+    enabled: true
+    receivers:
+      faro:
+        enabled: true
+      otlp:
+        enabled: true
+        grpc:
+          enabled: true
+  autoInstrumentation:
+    enabled: true
+  annotationAutodiscovery:
+    enabled: true
+  prometheusOperatorObjects:
+    enabled: false
+  profiling:
+    enabled: true
+    ebpf:
+      enabled: false  # can be set to true if pyroscope is disabled
+  profilesReceiver:
+    enabled: true
+  destinations:
+    - name: prometheus
+      type: prometheus
+      url: http://${release_name}-kube-prometheus-stack-prometheus:9090/api/v1/write
+    - name: loki
+      type: loki
+      url: http://${release_name}-loki-gateway/loki/api/v1/push
+    - name: tempo
+      type: otlp
+      url: http://${release_name}-tempo:4317
+      traces:
+        enabled: true
+    - name: pyroscope
+      type: pyroscope
+      url: http://${release_name}-pyroscope:4040
+  alerting:
+    enabled: true
+    alertmanager:
+      host: http://${release_name}-kube-prometheus-stack-alertmanager:9093
+
+# https://github.com/grafana/loki/blob/main/production/helm/loki/values.yaml
+loki:
+  enabled: true
+  deploymentMode: SingleBinary
+  resultsCache:
+    enabled: false
+  chunksCache:
+    enabled: false
+  test:  # if test is enabled, lokiCanary has to be enabled as well
+    enabled: false
+  lokiCanary:
+    enabled: false
+  loki:
+    auth_enabled: false
+    structuredConfig:
+      common:
+        replication_factor: 1
+        ring:
+          instance_addr: 127.0.0.1
+          kvstore:
+            store: inmemory
+      ingester:
+        lifecycler:
+          ring:
+            replication_factor: 1
+            kvstore:
+              store: inmemory
+      memberlist:
+        join_members: []
+    storage:
+      type: filesystem
+    compactor:
+      retention_enabled: true
+      delete_request_store: filesystem
+      working_directory: /var/loki/retention
+    schemaConfig:
+      configs:
+      - from: "2024-01-01"
+        store: tsdb
+        object_store: filesystem
+        schema: v13
+        index:
+          prefix: index_
+          period: 24h
+  singleBinary:
+    persistence:
+      enabled: true
+      size: 20Gi
+      storageClass: ""
+  resources:
+    limits:
+      cpu: "1"
+      memory: 2Gi
+    requests:
+      cpu: 100m
+      memory: 100Mi
+  backend:
+    replicas: 0
+  read:
+    replicas: 0
+  write:
+    replicas: 0
+
+# https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/values.yaml
+kube-prometheus-stack:
+  crds:
+    enabled: true
+    upgradeJob:
+      enabled: true
+      forceConflicts: true
+  nodeExporter:
+    enabled: true
+    operatingSystems:
+      linux:
+        enabled: true
+      aix:
+        enabled: false
+      darwin:
+        enabled: false
+  grafana:
+    enabled: true
+    initChownData:
+      enabled: false
+    defaultDashboardsEnabled: false
+    ingress:
+      enabled: true
+      ingressClassName: traefik
+      annotations:
+        cert-manager.io/cluster-issuer: "letsencrypt"
+      hosts:
+      - monitoring.ludicdrive.com
+      tls:
+      - hosts:
+        - monitoring.ludicdrive.com
+        secretName: monitoring.ludicdrive.com-tls
+    persistence:
+      enabled: true
+      size: 10Gi
+      storageClassName: ""
+    sidecar:
+      dashboards:
+        enabled: true
+        label: grafana_dashboard
+        searchNamespace: ALL
+      datasources:
+        enabled: true
+        name: Prometheus
+        uid: prometheus
+        extraJsonData:
+          annotations:
+          - name: "Alerting Events"
+            datasource: "Prometheus"
+            enable: true
+            iconColor: "#ff0000"
+            expr: 'ALERTS{alertstate="firing"}'
+            step: "1m"
+            textField: "alertname"
+          - name: "Flux Deployments"
+            datasource: "Prometheus"
+            enable: true
+            iconColor: "#00ff00"
+            expr: 'gotk_reconcile_condition{status="True",type="Ready"}'
+            textField: "name"
+        alertmanager:
+          enabled: true
+          name: Alertmanager
+          uid: alertmanager
+          handleGrafanaManagedAlerts: false
+          implementation: prometheus
+    additionalDataSources:
+    - name: Loki
+      type: loki
+      uid: loki
+      orgId: 1
+      url: http://{{ .Release.Name }}-loki-gateway
+      access: proxy
+      jsonData:
+        derivedFields:
+          - datasourceUid: tempo # must match UID of tempo datasource
+            matcherRegex: "trace_id=(\\w+)" # looks for trace_id=xyz in the logs
+            name: TraceID
+            url: '$${__value.raw}'
+    - name: Tempo
+      type: tempo
+      uid: tempo
+      orgId: 1
+      url: http://{{ .Release.Name }}-tempo:3200
+      access: proxy
+      jsonData:
+        serviceMap:
+          datasourceUid: prometheus
+        nodeGraph:
+          enabled: true
+    - name: Pyroscope
+      type: phlare
+      uid: pyroscope
+      orgId: 1
+      url: http://{{ .Release.Name }}-pyroscope:4040
+      access: proxy
+    grafana.ini:
+      dashboards:
+        default_home_dashboard_path: /tmp/dashboards/alert-history.json
+    dashboardProviders:
+      dashboardproviders.yaml:
+        apiVersion: 1
+        providers:
+          - name: 'default'
+            orgId: 1
+            folder: ''
+            type: file
+            disableDeletion: false
+            editable: true
+            options:
+              path: /var/lib/grafana/dashboards/default
+          - name: 'apps'
+            orgId: 1
+            folder: ''
+            type: file
+            disableDeletion: false
+            editable: true
+            options:
+              path: /var/lib/grafana/dashboards/apps
+          - name: 'cost-management'
+            orgId: 1
+            folder: 'cost-management'
+            type: file
+            disableDeletion: false
+            editable: true
+            options:
+              path: /var/lib/grafana/dashboards/cost-management
+          - name: 'k8s-infra'
+            orgId: 1
+            folder: 'k8s-infra'
+            type: file
+            disableDeletion: false
+            editable: true
+            options:
+              path: /var/lib/grafana/dashboards/k8s-infra
+    dashboards:
+      default:
+        alertsnitch:
+          gnetId: 22488
+          revision: 1
+          datasource: loki
+      cost-management:
+        opencost-overview:
+          gnetId: 22208
+          revision: 4
+          datasource: prometheus
+        opencost-namespace:
+          gnetId: 22252
+          revision: 5
+          datasource: prometheus
+      k8s-infra:
+        kubernetes-global:
+          gnetId: 15757
+          revision: 43
+          datasource: prometheus
+        kubernetes-pods:
+          gnetId: 15760
+          revision: 37
+          datasource: prometheus
+        kubernetes-namespaces:
+          gnetId: 15758
+          revision: 44
+          datasource: prometheus
+        kubernetes-nodes:
+          gnetId: 15760
+          revision: 40
+          datasource: prometheus
+        kubernetes-api-server:
+          gnetId: 15761
+          revision: 20
+          datasource: prometheus
+        kubernetes-core-dns:
+          gnetId: 15762
+          revision: 22
+          datasource: prometheus
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+  prometheus:
+    prometheusSpec:
+      enableRemoteWriteReceiver: true
+    resources:
+      limits: 
+        cpu: "2"
+        memory: 4Gi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+    server:
+      retention: 14d
+      persistentVolume:
+        size: 20Gi
+      extraFlags:
+        - web.enable-remote-write-receiver
+    prometheus-windows-exporter:
+      prometheus:
+        monitor:
+          enabled: false
+  alertmanager:
+    enabled: true
+    alertmanagerSpec:
+      web:
+        tlsConfig: null
+    kubeControllerManager:
+      enabled: false  # set to true if not using ks3
+    kubeScheduler:
+      enabled: false  # set to true if not using ks3
+    kubeProxy:
+      enabled: false  # set to true if not using ks3
+    defaultRules:
+      create: true
+      rules:
+        alertmanager: true
+        etcd: true
+        configReloaders: true
+        general: true
+        k8sContainerCpuUsageSecondsTotal: true
+        k8sContainerMemoryCache: true
+        k8sContainerMemoryRss: true
+        k8sContainerMemorySwap: true
+        k8sContainerResource: true
+        k8sContainerMemoryWorkingSetBytes: true
+        k8sPodOwner: true
+        kubeApiserverAvailability: true
+        kubeApiserverBurnrate: true
+        kubeApiserverHistogram: true
+        kubeApiserverSlos: true
+        kubeControllerManager: false  # set to true if not using ks3
+        kubelet: true
+        kubeProxy: false  # set to true if not using ks3
+        kubePrometheusGeneral: true
+        kubePrometheusNodeRecording: true
+        kubernetesApps: true
+        kubernetesResources: true
+        kubernetesStorage: true
+        kubernetesSystem: true
+        kubeSchedulerAlerting: false  # set to true if not using ks3
+        kubeSchedulerRecording: false  # set to true if not using ks3
+        kubeStateMetrics: true
+        network: true
+        node: true
+        nodeExporterAlerting: true
+        nodeExporterRecording: true
+        prometheus: true
+        prometheusOperator: true
+        windows: false
+    config:
+      global:
+        slack_api_url: "http://placeholder-url"
+        resolve_timeout: 5m
+      route:
+        group_by: ['alertname', 'job']
+        group_wait: 30s
+        group_interval: 5m
+        repeat_interval: 12h
+        receiver: 'alertsnitch'
+        routes:
+          - receiver: 'alertsnitch'
+            continue: true
+          - receiver: 'slack-notifications'
+            matchers:
+              - severity = critical
+      receivers:
+      - name: 'alertsnitch'
+        webhook_configs:
+        - url: 'http://alertsnitch:9567/webhook'
+          send_resolved: true
+      - name: 'slack-notifications'
+        slack_configs:
+          - channel: '#k8s-ops'
+            send_resolved: true
+            actions:
+              - type: button
+                text: '📈 View Dashboard'
+                url: 'https://monitoring.ludicdrive.com/d/alert-history?var-alertname={{ .GroupLabels.alertname }}&from={{ (index .Alerts 0).StartsAt.Unix }}000&to=now'
+
+# https://github.com/grafana-community/helm-charts/blob/main/charts/tempo/values.yaml
+tempo:
+  enabled: true
+  tempo:
+    reportingEnabled: false
+    retention: 336h 
+    storage:
+      trace:
+        backend: local
+        local:
+          path: /var/tempo/traces
+        wal:
+          path: /var/tempo/wal
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: "0.0.0.0:4317"
+          http:
+            endpoint: "0.0.0.0:4318"
+    metricsGenerator:
+      # -- If true, enables Tempo's metrics generator (https://grafana.com/docs/tempo/next/metrics-generator/)
+      enabled: true
+      remoteWriteUrl: "http://${release_name}-kube-prometheus-stack-prometheus:9090/api/v1/write"
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1Gi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+  persistence:
+    enabled: true
+    size: 50Gi
+    storageClassName: ""
+
+# https://github.com/grafana/pyroscope/blob/main/operations/pyroscope/helm/pyroscope/values.yaml
+pyroscope:
+  enabled: true
+  pyroscope:
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1Gi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+
+# https://github.com/prometheus-community/helm-charts/blob/main/charts/prometheus-blackbox-exporter/values.yaml
+prometheus-blackbox-exporter:
+  enabled: true
+  defaults:
+    module: http_2xx

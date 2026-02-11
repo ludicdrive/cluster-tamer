@@ -1,0 +1,8 @@
+# .helmignore
+.git
+*.zip
+*.pdf
+*.jar
+docs/
+test/
+values.test.yaml

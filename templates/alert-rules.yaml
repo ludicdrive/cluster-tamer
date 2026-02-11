@@ -1,0 +1,20 @@
+{{- if index .Values "kube-prometheus-stack" "alertmanager" "enabled" }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ .Release.Name }}-storage-alerts
+  labels:
+    release: {{ .Release.Name }}
+spec:
+  groups:
+  - name: storage.rules
+    rules:
+    - alert: LowDiskSpace
+      expr: node_filesystem_avail_bytes / node_filesystem_size_bytes * 100 < 10
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Low Disk Space on {{ "{{" }} $labels.instance {{ "}}" }}"
+        description: "Node {{ "{{" }} $labels.instance {{ "}}" }} has less than 10% disk space remaining."
+{{- end }}
