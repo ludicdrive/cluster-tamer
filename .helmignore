@@ -6,3 +6,4 @@
 docs/
 test/
 values.test.yaml
+deploy.sh

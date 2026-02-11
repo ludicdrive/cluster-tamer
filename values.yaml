@@ -412,6 +412,11 @@ kube-prometheus-stack:
           enabled: false
   alertmanager:
     enabled: true
+    extraSecretMounts:
+      - name: alertmanager-secrets
+        mountPath: /etc/secrets
+        secretName: slack-config
+        readOnly: true
     alertmanagerSpec:
       web:
         tlsConfig: null
@@ -460,8 +465,8 @@ kube-prometheus-stack:
         windows: false
     config:
       global:
-        slack_api_url: "http://placeholder-url"
         resolve_timeout: 5m
+        slack_api_url_file: '/etc/secrets/slackWebhookUrl'
       route:
         group_by: ['alertname', 'job']
         group_wait: 30s
@@ -541,3 +546,7 @@ prometheus-blackbox-exporter:
   enabled: true
   defaults:
     module: http_2xx
+
+blackboxProbeTargets:
+  - https://example.com
+  - https://another.example.com

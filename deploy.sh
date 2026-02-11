@@ -23,7 +23,7 @@ kubectl create namespace $NAMESPACE > /dev/null 2>&1
 # Slack Webhook
 if ! kubectl get secret slack-config -n "$NAMESPACE" > /dev/null 2>&1; then
     read -p "Enter Slack Webhook URL: " SLACK_URL
-    kubectl create secret generic slack-config --from-literal=url="$SLACK_URL" -n "$NAMESPACE"
+    kubectl create secret generic slack-config --from-literal=slackWebhookUrl="$SLACK_URL" -n "$NAMESPACE"
 fi
 
 SLACK_WEBHOOK_URL=$(kubectl get secret slack-config -n "$NAMESPACE" -o jsonpath='{.data.url}' | base64 -d)
@@ -61,9 +61,6 @@ HELM_OPTS=(
 
   # Alerting
   --set "k8s-monitoring.alerting.alertmanager.host=http://$RELEASE_NAME-kube-prometheus-stack-alertmanager:9093"
-
-  # slack webhook url
-  --set "kube-prometheus-stack.alertmanager.config.global.slack_api_url=$SLACK_WEBHOOK_URL"
 
   # tempo 
   --set "tempo.tempo.metricsGenerator.remoteWriteUrl=http://$RELEASE_NAME-kube-prometheus-stack-prometheus:9090/api/v1/write"

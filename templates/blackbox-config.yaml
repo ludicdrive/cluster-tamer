@@ -13,7 +13,7 @@ spec:
   targets:
     staticConfig:
       static:
-        - "https://monitoring.ludicdrive.com"  # replace and add your hosts
+        {{- .Values.blackboxProbeTargets | toYaml | nindent 8 }}
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
