@@ -79,24 +79,26 @@ kubectl delete namespace [NAMESPACE]
 
 Recommended approach, using GitOps principles (does not need `deploy.sh`).
 
-### Secrets for Matrix
+### Secret for Slack
 
 ```yaml
 apiVersion: v1
 kind: Secret
 metadata:
   name: slack-config
-  namespace: flux-system
+  namespace: monitoring
 stringData:
   slackWebhookUrl: "https://hooks.slack.com/services/TOKEN_THIS/TOKEN_THAT"
 ```
+
+### Secret for object storage (optional)
 
 ```yaml
 apiVersion: v1
 kind: Secret
 metadata:
   name: cluster-tamer-s3-creds
-  namespace: flux-system
+  namespace: monitoring
 stringData:
   access-key: "ABC"
   secret-key: "Secret"
@@ -152,7 +154,18 @@ spec:
         endpoint: s3.amazonaws.com
         region: eu-central-1
         bucket: my-cluster-tamer-storage
-    
+    k8s-monitoring:
+      cluster:
+        name: flux-cluster
+      opencost:
+        opencost:
+          exporter:
+            defaultClusterId: flux-cluster
+          prometheus:
+            external:
+              enabled: true
+              url: http://${release_name}-kube-prom-stack-prometheus:9090
+
     loki:
       loki:
         storage:
@@ -181,7 +194,7 @@ spec:
               prefix: pyroscope
               endpoint: s3.amazonaws.com
             
-    kube-prometheus-stack:
+    kube-prom-stack:
       alertmanager:
         config:
           global:
@@ -254,7 +267,7 @@ The Flux Notification Controller watches for these events. Since you defined an 
 It packages the error (e.g., "failed to upgrade release: validation failed") into a standardized payload. Flux Notification Controller Documentation.
 3. Transmission (Alertmanager Provider)
 Flux uses the Provider you configured to send a POST request to the Alertmanager service within your cluster.
-Target: http://$RELEASE_NAME-kube-prometheus-stack-alertmanager:9093. (Replace `$RELEASE_NAME` with your release name.)
+Target: http://$RELEASE_NAME-kube-prom-stack-alertmanager:9093. (Replace `$RELEASE_NAME` with your release name.)
 4. Processing (Alertmanager)
 The Alertmanager receives the alert. It performs three critical tasks:
 Deduplication: If Flux sends the same error 10 times in a minute, Alertmanager merges them into one notification.
@@ -309,7 +322,7 @@ metadata:
   namespace: flux-system
 spec:
   type: alertmanager
-  address: http://$RELEASE_NAME-kube-prometheus-stack-alertmanager:9093
+  address: http://$RELEASE_NAME-kube-prom-stack-alertmanager:9093
   channel: flux
 ---
 apiVersion: notification.toolkit.fluxcd.io/v1beta3

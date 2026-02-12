@@ -1,9 +1,13 @@
 apiVersion: v2
 name: cluster-tamer
 description: Custom Grafana Full Stack
-version: 1.0.0
+version: 1.0.1
 type: application
-
+home: https://github.com/ludicdrive/cluster-tamer
+maintainers:
+  - name: Josef Prenner
+    email: office@ludicdrive.com
+    url: https://ludicdrive.com
 dependencies:
   - name: k8s-monitoring
     version: 3.8.0
@@ -15,6 +19,7 @@ dependencies:
   - name: kube-prometheus-stack
     version: 81.5.0
     repository: "https://prometheus-community.github.io/helm-charts"
+    alias: kube-prom-stack
   - name: tempo
     version: 1.26.1
     repository: https://grafana-community.github.io/helm-charts

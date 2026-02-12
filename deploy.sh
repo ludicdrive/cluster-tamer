@@ -41,7 +41,7 @@ HELM_OPTS=(
   # Destination 0: Prometheus
   --set "k8s-monitoring.destinations[0].name=prometheus"
   --set "k8s-monitoring.destinations[0].type=prometheus"
-  --set "k8s-monitoring.destinations[0].url=http://$RELEASE_NAME-kube-prometheus-stack-prometheus:9090/api/v1/write"
+  --set "k8s-monitoring.destinations[0].url=http://$RELEASE_NAME-kube-prom-stack-prometheus:9090/api/v1/write"
 
   # Destination 1: Loki
   --set "k8s-monitoring.destinations[1].name=loki"
@@ -60,13 +60,13 @@ HELM_OPTS=(
   --set "k8s-monitoring.destinations[3].url=http://$RELEASE_NAME-pyroscope:4040"
 
   # Alerting
-  --set "k8s-monitoring.alerting.alertmanager.host=http://$RELEASE_NAME-kube-prometheus-stack-alertmanager:9093"
+  --set "k8s-monitoring.alerting.alertmanager.host=http://$RELEASE_NAME-kube-prom-stack-alertmanager:9093"
 
   # tempo 
-  --set "tempo.tempo.metricsGenerator.remoteWriteUrl=http://$RELEASE_NAME-kube-prometheus-stack-prometheus:9090/api/v1/write"
+  --set "tempo.tempo.metricsGenerator.remoteWriteUrl=http://$RELEASE_NAME-kube-prom-stack-prometheus:9090/api/v1/write"
 
   # opencost
-  --set "k8s-monitoring.clusterMetrics.opencost.opencost.prometheus.external.url=http://$RELEASE_NAME-kube-prometheus-stack-prometheus:9090"
+  --set "k8s-monitoring.clusterMetrics.opencost.opencost.prometheus.external.url=http://$RELEASE_NAME-kube-prom-stack-prometheus:9090"
   --set "k8s-monitoring.clusterMetrics.opencost.service.labels.release=$RELEASE_NAME"
   --set "k8s-monitoring.clusterMetrics.opencost.opencost.metrics.serviceMonitor.additionalLabels.release=$RELEASE_NAME"
 )
@@ -77,7 +77,7 @@ helm upgrade --install "$RELEASE_NAME" "$CHART_PATH" "${HELM_OPTS[@]}"
 
 # Wait for Health (Wait command for Deployments & StatefulSets)
 echo "⏳ Waiting for core components..."
-CORE_DEPS=("$RELEASE_NAME-loki-gateway" "$RELEASE_NAME-kube-prometheus-stack-operator" "$RELEASE_NAME-grafana" "$RELEASE_NAME-opencost" "$RELEASE_NAME-alloy-operator" )
+CORE_DEPS=("$RELEASE_NAME-loki-gateway" "$RELEASE_NAME-kube-prom-stack-operator" "$RELEASE_NAME-grafana" "$RELEASE_NAME-opencost" "$RELEASE_NAME-alloy-operator" )
 
 for DEP in "${CORE_DEPS[@]}"; do
   kubectl wait --for=condition=available --timeout=300s "deployment/$DEP" -n "$NAMESPACE" || exit 1

@@ -6,7 +6,7 @@ k8s-monitoring:
     enabled: true
     kepler:
       enabled: false
-    node-exporter:  # linux nodes, covered by kube-prometheus-stack
+    node-exporter:  # linux nodes, covered by kube-prom-stack
       enabled: true
       deploy: false
     windows-exporter:
@@ -44,7 +44,7 @@ k8s-monitoring:
         prometheus:
           external:
             enabled: true
-            url: http://${release_name}-kube-prometheus-stack-prometheus:9090
+            url: http://${release_name}-kube-prom-stack-prometheus:9090
         
   clusterEvents:
     enabled: true
@@ -128,7 +128,7 @@ k8s-monitoring:
   destinations:
     - name: prometheus
       type: prometheus
-      url: http://${release_name}-kube-prometheus-stack-prometheus:9090/api/v1/write
+      url: http://${release_name}-kube-prom-stack-prometheus:9090/api/v1/write
     - name: loki
       type: loki
       url: http://${release_name}-loki-gateway/loki/api/v1/push
@@ -143,7 +143,7 @@ k8s-monitoring:
   alerting:
     enabled: true
     alertmanager:
-      host: http://${release_name}-kube-prometheus-stack-alertmanager:9093
+      host: http://${release_name}-kube-prom-stack-alertmanager:9093
 
 # https://github.com/grafana/loki/blob/main/production/helm/loki/values.yaml
 loki:
@@ -208,8 +208,8 @@ loki:
   write:
     replicas: 0
 
-# https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/values.yaml
-kube-prometheus-stack:
+# https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prom-stack/values.yaml
+kube-prom-stack:
   crds:
     enabled: true
     upgradeJob:
@@ -516,7 +516,7 @@ tempo:
     metricsGenerator:
       # -- If true, enables Tempo's metrics generator (https://grafana.com/docs/tempo/next/metrics-generator/)
       enabled: true
-      remoteWriteUrl: "http://${release_name}-kube-prometheus-stack-prometheus:9090/api/v1/write"
+      remoteWriteUrl: "http://${release_name}-kube-prom-stack-prometheus:9090/api/v1/write"
     resources:
       limits:
         cpu: 500m

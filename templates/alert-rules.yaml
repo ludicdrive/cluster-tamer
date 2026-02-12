@@ -1,4 +1,4 @@
-{{- if index .Values "kube-prometheus-stack" "alertmanager" "enabled" }}
+{{- if index .Values "kube-prom-stack" "alertmanager" "enabled" }}
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
