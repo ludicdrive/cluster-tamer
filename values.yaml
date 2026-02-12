@@ -349,6 +349,10 @@ kube-prom-stack:
           gnetId: 22488
           revision: 1
           datasource: loki
+        blackbox-exporter:
+          gnetId: 13659
+          revision: 1
+          datasource: prometheus
       cost-management:
         opencost-overview:
           gnetId: 22208
