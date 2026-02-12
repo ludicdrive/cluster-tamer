@@ -1,4 +1,4 @@
-# 📊 Cluster Tamer 
+# 📊 Cluster Tamer
 
 Cluster-Tamer is a monitoring and observability stack for Kubernetes, bundling open-source tools into an integrated umbrella Helm chart for metrics, logs, traces, and costs within a single source of truth (Grafana). Key components include Kube-Prometheus-Stack for core monitoring, Grafana Loki for log aggregation, Grafana Tempo for distributed tracing, OpenCost for cost analysis, and Alertsnitch for alert history. Features include an Alert-History Dashboard correlating alerts with Flux deployment events, GitOps correlation showing reconciliations in alert timelines, trace-to-metrics for service graphs, SSL monitoring, and cost-aware alerting. Installation requires Kubernetes, Helm 3.x, and optionally Flux CD.
 
@@ -104,23 +104,37 @@ stringData:
   secret-key: "Secret"
 ```
 
+### Gitrepo
+
+```yaml
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: cluster-tamer
+  namespace: flux-system
+spec:
+  interval: 48h
+  url: https://github.com/ludicdrive/cluster-tamer
+  ref:
+    branch: main
+```
+
 ### Helmrelease
 
 ```yaml
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
-  name: cluster-tamer
+  name: ct  # use a short name, otherwise kube-prom-stack will shorten service names
   namespace: monitoring
 spec:
   interval: 10m
   chart:
     spec:
-      chart: cluster-tamer
-      version: "1.0.0"
+      chart: ./
       sourceRef:
-        kind: HelmRepository
-        name: ludicdrive
+        kind: GitRepository
+        name: cluster-tamer
         namespace: flux-system
 
   valuesFrom:
@@ -285,6 +299,7 @@ metadata:
   labels:
     app: flux
     team: platform
+    release: ct
 spec:
   groups:
     - name: flux-alerts
