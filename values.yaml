@@ -392,8 +392,8 @@ kube-prom-stack:
       tls:
         enabled: false
     alertmanagerSpec:
-      web:
-        tlsConfig: {}
+      web: {}
+      tlsConfig: {}
       secrets:
         - slack-config
     kubeControllerManager:
