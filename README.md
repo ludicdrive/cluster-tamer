@@ -238,15 +238,15 @@ spec:
             
     kube-prom-stack:
       alertmanager:
-        extraSecretMounts:
-        - name: alertmanager-secrets
-          mountPath: /etc/secrets
-          secretName: slack-config
-          readOnly: true
+        alertmanagerSpec:
+          web:
+            tlsConfig: null
+          secrets: # mounted to /etc/alertmanager/secrets/
+            - slack-config
         config:
           global:
             resolve_timeout: 5m
-            slack_api_url_file: '/etc/secrets/slackWebhookUrl'
+            slack_api_url_file: '/etc/alertmanager/secrets/slack-config/slackWebhookUrl'
           route:
             group_by: ['alertname', 'cluster', 'namespace']
             group_wait: 30s
@@ -258,12 +258,12 @@ spec:
                 continue: true
               - receiver: 'slack-default'
                 continue: true
-              - match:
-                  severity: critical
+              - matchers:
+                  - severity = critical
                 receiver: 'slack-critical'
                 group_wait: 10s  # Faster delivery for critical alerts
-              - match:
-                  team: platform
+              - matchers:
+                  - team = platform
                 receiver: 'slack-platform'
 
           receivers:
@@ -298,10 +298,10 @@ spec:
                   send_resolved: true
 
           inhibit_rules:
-            - source_match:
-                severity: 'critical'
-              target_match:
-                severity: 'warning'
+            - source_matchers:
+                - severity = 'critical'
+              target_matchers:
+                - severity = 'warning'
               equal: ['alertname', 'cluster', 'namespace']
     
     blackboxProbeTargets:
