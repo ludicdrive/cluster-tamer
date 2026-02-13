@@ -7,7 +7,10 @@ k8s-monitoring:
     kepler:
       enabled: false
     node-exporter:  # linux nodes, covered by kube-prom-stack
-      enabled: true
+      enabled: false
+      deploy: false
+    kube-state-metrics:
+      enabled: false
       deploy: false
     windows-exporter:
       enabled: false
@@ -228,7 +231,7 @@ kube-prom-stack:
     enabled: true
     initChownData:
       enabled: false
-    defaultDashboardsEnabled: false
+    defaultDashboardsEnabled: true
     ingress:
       enabled: true
       ingressClassName: traefik
@@ -335,14 +338,6 @@ kube-prom-stack:
             editable: true
             options:
               path: /var/lib/grafana/dashboards/cost-management
-          - name: 'k8s-infra'
-            orgId: 1
-            folder: 'k8s-infra'
-            type: file
-            disableDeletion: false
-            editable: true
-            options:
-              path: /var/lib/grafana/dashboards/k8s-infra
     dashboards:
       default:
         alertsnitch:
@@ -362,31 +357,6 @@ kube-prom-stack:
           gnetId: 22252
           revision: 5
           datasource: prometheus
-      k8s-infra:
-        kubernetes-global:
-          gnetId: 15757
-          revision: 43
-          datasource: prometheus
-        kubernetes-pods:
-          gnetId: 15760
-          revision: 37
-          datasource: prometheus
-        kubernetes-namespaces:
-          gnetId: 15758
-          revision: 44
-          datasource: prometheus
-        kubernetes-nodes:
-          gnetId: 15760
-          revision: 40
-          datasource: prometheus
-        kubernetes-api-server:
-          gnetId: 15761
-          revision: 20
-          datasource: prometheus
-        kubernetes-core-dns:
-          gnetId: 15762
-          revision: 22
-          datasource: prometheus
     resources:
       limits:
         cpu: 500m
@@ -396,6 +366,8 @@ kube-prom-stack:
         memory: 100Mi
   prometheus:
     prometheusSpec:
+      externalLabels:
+        cluster: "my-cluster"  # must match value of k8s-monitoring.cluster.name
       enableRemoteWriteReceiver: true
     resources:
       limits: 

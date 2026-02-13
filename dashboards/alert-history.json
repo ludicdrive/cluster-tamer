@@ -24,7 +24,7 @@
         "enable": true,
         "iconColor": "#ff7383",
         "name": "Flux Errors",
-        "expr": "{namespace=\"flux-system\"} | = \"error\""
+        "expr": "{namespace=\"flux-system\"} |= \"error\""
       },
       {
         "datasource": { "uid": "$datasource_loki" },

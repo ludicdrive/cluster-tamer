@@ -171,14 +171,42 @@ spec:
     k8s-monitoring:
       cluster:
         name: flux-cluster
-      opencost:
+      clusterMetrics:
         opencost:
-          exporter:
-            defaultClusterId: flux-cluster
-          prometheus:
-            external:
-              enabled: true
-              url: http://${release_name}-kube-prom-stack-prometheus:9090
+          service:
+            labels:
+              release: ${release_name}
+          opencost:
+            exporter:
+              defaultClusterId: flux-cluster  # must match cluster.name above
+            metrics:
+              serviceMonitor:
+                enabled: true
+                additionalLabels:
+                  release: ${release_name}
+            prometheus:
+              external:
+                enabled: true
+                url: http://${release_name}-kube-prom-stack-prometheus:9090
+      destinations:
+        - name: prometheus
+          type: prometheus
+          url: http://${release_name}-kube-prom-stack-prometheus:9090/api/v1/write
+        - name: loki
+          type: loki
+          url: http://${release_name}-loki-gateway/loki/api/v1/push
+        - name: tempo
+          type: otlp
+          url: http://${release_name}-tempo:4317
+          traces:
+            enabled: true
+        - name: pyroscope
+          type: pyroscope
+          url: http://${release_name}-pyroscope:4040
+      alerting:
+        enabled: true
+        alertmanager:
+          host: http://${release_name}-kube-prom-stack-alertmanager:9093
 
     loki:
       loki:
@@ -210,6 +238,11 @@ spec:
             
     kube-prom-stack:
       alertmanager:
+        extraSecretMounts:
+        - name: alertmanager-secrets
+          mountPath: /etc/secrets
+          secretName: slack-config
+          readOnly: true
         config:
           global:
             resolve_timeout: 5m
@@ -219,9 +252,12 @@ spec:
             group_wait: 30s
             group_interval: 5m
             repeat_interval: 4h
-            receiver: 'slack-default'
-
+            receiver: 'alertsnitch'
             routes:
+              - receiver: 'alertsnitch'
+                continue: true
+              - receiver: 'slack-default'
+                continue: true
               - match:
                   severity: critical
                 receiver: 'slack-critical'
@@ -231,6 +267,11 @@ spec:
                 receiver: 'slack-platform'
 
           receivers:
+            - name: 'alertsnitch'
+              webhook_configs:
+              - url: 'http://alertsnitch:9567/webhook'
+                send_resolved: true
+
             - name: 'slack-default'
               slack_configs:
                 - channel: '#alerts'
@@ -266,6 +307,23 @@ spec:
     blackboxProbeTargets:
       - https://my-url-to-probe.example.com
       - https://another.url-to-probe.example.com
+```
+
+### Release Name Substitution
+
+To replace the `${release_name}` in the `HelmRelease` use a `Kustomization`.
+
+```yaml
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+spec:
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./apps/monitoring
+  postBuild:
+    substitute:
+      release_name: ct  # use your release name from the HelmRelease above
 ```
 
 ### Flux Alert
