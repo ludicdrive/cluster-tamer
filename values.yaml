@@ -396,49 +396,6 @@ kube-prom-stack:
       tlsConfig: {}
       secrets:
         - slack-config
-    kubeControllerManager:
-      enabled: false  # set to true if not using ks3
-    kubeScheduler:
-      enabled: false  # set to true if not using ks3
-    kubeProxy:
-      enabled: false  # set to true if not using ks3
-    defaultRules:
-      create: true
-      rules:
-        alertmanager: true
-        etcd: true
-        configReloaders: true
-        general: true
-        k8sContainerCpuUsageSecondsTotal: true
-        k8sContainerMemoryCache: true
-        k8sContainerMemoryRss: true
-        k8sContainerMemorySwap: true
-        k8sContainerResource: true
-        k8sContainerMemoryWorkingSetBytes: true
-        k8sPodOwner: true
-        kubeApiserverAvailability: true
-        kubeApiserverBurnrate: true
-        kubeApiserverHistogram: true
-        kubeApiserverSlos: true
-        kubeControllerManager: false  # set to true if not using ks3
-        kubelet: true
-        kubeProxy: false  # set to true if not using ks3
-        kubePrometheusGeneral: true
-        kubePrometheusNodeRecording: true
-        kubernetesApps: true
-        kubernetesResources: true
-        kubernetesStorage: true
-        kubernetesSystem: true
-        kubeSchedulerAlerting: false  # set to true if not using ks3
-        kubeSchedulerRecording: false  # set to true if not using ks3
-        kubeStateMetrics: true
-        network: true
-        node: true
-        nodeExporterAlerting: true
-        nodeExporterRecording: true
-        prometheus: true
-        prometheusOperator: true
-        windows: false
     config:
       global:
         resolve_timeout: 5m
