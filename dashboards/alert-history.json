@@ -58,7 +58,7 @@
         "defaults": {
           "color": {
             "mode": "fixed",
-            "fixedColor": "#c8f2c2"
+            "fixedColor": "#37872d"
           },
           "custom": {
             "showValue": "never",
@@ -75,7 +75,7 @@
               {
                 "id": "color",
                 "value": {
-                  "fixedColor": "red",
+                  "fixedColor": "#c4162a",
                   "mode": "fixed"
                 }
               }
@@ -90,7 +90,7 @@
               {
                 "id": "color",
                 "value": {
-                  "fixedColor": "orange",
+                  "fixedColor": "#fa6400",
                   "mode": "fixed"
                 }
               }
@@ -124,11 +124,18 @@
     {
       "title": "Overall CPU Resources (Namespace: $namespace)",
       "type": "timeseries",
-      "datasource": "${datasource}",
+      "datasource": {
+        "uid": "$datasource_prom"
+      },
+      "refresh": 1,
       "fieldConfig": {
         "defaults": {
           "unit": "cores",
-          "custom": { "drawStyle": "line", "fillOpacity": 10 }
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "showPoints": "never"
+          }
         }
       },
       "gridPos": {
@@ -158,11 +165,17 @@
     {
       "title": "Overall RAM Resources (Namespace: $namespace)",
       "type": "timeseries",
-      "datasource": "${datasource}",
+      "datasource": {
+        "uid": "$datasource_prom"
+      },
       "fieldConfig": {
         "defaults": {
           "unit": "bytes",
-          "custom": { "drawStyle": "line", "fillOpacity": 10 }
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "showPoints": "never"
+          }
         }
       },
       "gridPos": {
@@ -240,18 +253,22 @@
         "refresh": 1
       },
       {
-        "name": "namespace",
-        "type": "query",
+        "allValue": ".+",
         "datasource": {
           "uid": "$datasource_prom"
         },
         "definition": "label_values(namespace)",
-        "query": "label_values(namespace)",
         "includeAll": true,
-        "multi": true,
         "label": "Namespace",
+        "multi": true,
+        "name": "namespace",
+        "query": {
+          "query": "label_values(namespace)",
+          "refId": "StandardVariableQuery"
+        },
         "refresh": 1,
-        "sort": 1
+        "sort": 1,
+        "type": "query"
       }
     ]
   },
