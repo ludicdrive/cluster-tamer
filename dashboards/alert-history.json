@@ -17,7 +17,7 @@
         "enable": true,
         "iconColor": "#96d98d",
         "name": "Flux Deployments",
-        "expr": "{namespace=\"flux-system\"} | reason=\"ReconciliationSucceeded\" or reason=\"ArtifactUpdate\""
+        "expr": "{namespace=\"flux-system\"} | reason=\"ReconciliationSucceeded\" or reason=\"NewArtifact\""
       },
       {
         "datasource": { "uid": "$datasource_loki" },
@@ -32,6 +32,13 @@
         "iconColor": "#ca95e5",
         "name": "Flux Timeout",
         "expr": "{namespace=\"flux-system\"} |= \"context deadline exceeded\""
+      },
+      {
+        "datasource": { "uid": "$datasource_loki" },
+        "enable": true,
+        "iconColor": "#f5be27",
+        "name": "Helm Chart Update",
+        "expr": "{namespace=\"flux-system\"} |= reason=\"ChartPackageSucceeded\""
       }
     ]
   },
