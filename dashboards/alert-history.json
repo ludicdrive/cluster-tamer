@@ -259,6 +259,8 @@
     "from": "now-1h",
     "to": "now"
   },
+  "refresh": "30s",
+  "preload": true,
   "schemaVersion": 38,
   "title": "Alert History",
   "uid": "alert-history",

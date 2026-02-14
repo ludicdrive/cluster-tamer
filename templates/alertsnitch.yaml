@@ -1,3 +1,4 @@
+{{- if .Values.alertsnitch.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -36,3 +37,4 @@ spec:
   ports:
   - port: 9567
     targetPort: 9567
+{{- end }}

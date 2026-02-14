@@ -483,3 +483,6 @@ prometheus-blackbox-exporter:
 blackboxProbeTargets:
   - https://example.com
   - https://another.example.com
+
+alertsnitch:
+  enabled: true
