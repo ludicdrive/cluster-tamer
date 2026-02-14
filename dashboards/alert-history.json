@@ -49,16 +49,16 @@
       },
       "targets": [
         {
-          "expr": "ALERTS{alertname=~\"$alertname\", alertname!~\"InfoInhibitor|Watchdog\", alertstate=\"firing\"}",
+          "expr": "ALERTS{alertname=~\"$alertname\", alertname!~\"InfoInhibitor\", alertstate=\"firing\"}",
           "format": "time_series",
-          "legendFormat": "{{alertname}} / {{pod}} - {{severity}}"
+          "legendFormat": "{{alertname}} - {{severity}}"
         }
       ],
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "fixed",
-            "fixedColor": "gray"
+            "fixedColor": "#c8f2c2"
           },
           "custom": {
             "showValue": "never",
@@ -122,11 +122,79 @@
       }
     },
     {
+      "title": "Overall CPU Resources (Namespace: $namespace)",
+      "type": "timeseries",
+      "datasource": "${datasource}",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "cores",
+          "custom": { "drawStyle": "line", "fillOpacity": 10 }
+        }
+      },
+      "gridPos": {
+        "h": 14,
+        "w": 24,
+        "x": 0,
+        "y": 14
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(container_cpu_usage_seconds_total{container!=\"\", namespace=~\"$namespace\"}[5m]))",
+          "legendFormat": "Usage",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(kube_pod_container_resource_requests{resource=\"cpu\", namespace=~\"$namespace\"})",
+          "legendFormat": "Requests",
+          "refId": "B"
+        },
+        {
+          "expr": "sum(kube_pod_container_resource_limits{resource=\"cpu\", namespace=~\"$namespace\"})",
+          "legendFormat": "Limits",
+          "refId": "C"
+        }
+      ]
+    },
+    {
+      "title": "Overall RAM Resources (Namespace: $namespace)",
+      "type": "timeseries",
+      "datasource": "${datasource}",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": { "drawStyle": "line", "fillOpacity": 10 }
+        }
+      },
+      "gridPos": {
+        "h": 14,
+        "w": 24,
+        "x": 0,
+        "y": 28
+      },
+      "targets": [
+        {
+          "expr": "sum(container_memory_working_set_bytes{container!=\"\", namespace=~\"$namespace\"})",
+          "legendFormat": "Usage",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(kube_pod_container_resource_requests{resource=\"memory\", namespace=~\"$namespace\"})",
+          "legendFormat": "Requests",
+          "refId": "B"
+        },
+        {
+          "expr": "sum(kube_pod_container_resource_limits{resource=\"memory\", namespace=~\"$namespace\"})",
+          "legendFormat": "Limits",
+          "refId": "C"
+        }
+      ]
+    },
+    {
       "type": "logs",
       "title": "Alert Logs (Namespace: $namespace | Search: $alertname)",
       "gridPos": {
         "x": 0,
-        "y": 14,
+        "y": 42,
         "w": 24,
         "h": 14
       },
@@ -177,8 +245,8 @@
         "datasource": {
           "uid": "$datasource_prom"
         },
-        "definition": "label_values(ALERTS, namespace)",
-        "query": "label_values(ALERTS, namespace)",
+        "definition": "label_values(namespace)",
+        "query": "label_values(namespace)",
         "includeAll": true,
         "multi": true,
         "label": "Namespace",
