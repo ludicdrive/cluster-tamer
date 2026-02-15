@@ -30,20 +30,6 @@ k8s-monitoring:
             enabled: true
             additionalLabels:
               release: ${release_name}
-        # static prices for custom provider
-        customPricing:
-          enabled: true
-          provider: custom
-          costModel:
-            # costs per unit/h
-            CPU: 0.00109  # e.g: 0,59125€ / 730h
-            RAM: 0.00043  # e.g: 0,59125€ / 730h
-            storage: 0.0000076   # cost per GB-h
-            GPU: 0          # usually 0 on standard server without gpu
-            zoneNetworkEgress: 0
-            regionNetworkEgress: 0
-            internetNetworkEgress: 0
-        currencyCode: "EUR"
         prometheus:
           external:
             enabled: true
