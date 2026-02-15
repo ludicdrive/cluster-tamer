@@ -8,4 +8,8 @@ metadata:
 data:
   alert-history.json: |
     {{- .Files.Get "dashboards/alert-history.json" | nindent 4 }}
+  {{ if .Values.alertsnitch.enabled }}
+  alertsnitch_22488_rev1.json: |
+    {{- .Files.Get "dashboards/alertsnitch_22488_rev1.json" | nindent 4 }}
+  {{- end }}
 {{- end }}

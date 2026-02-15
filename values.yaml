@@ -340,10 +340,6 @@ kube-prom-stack:
               path: /var/lib/grafana/dashboards/cost-management
     dashboards:
       default:
-        alertsnitch:
-          gnetId: 22488
-          revision: 1
-          datasource: loki
         blackbox-exporter:
           gnetId: 13659
           revision: 1
