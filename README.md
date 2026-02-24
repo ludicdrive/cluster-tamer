@@ -1,6 +1,6 @@
-# 📊 Cluster Tamer
+# 📊 Transparent Kube
 
-Cluster-Tamer is a monitoring and observability stack for Kubernetes, bundling open-source tools into an integrated umbrella Helm chart for metrics, logs, traces, and costs within a single source of truth (Grafana). Key components include Kube-Prometheus-Stack for core monitoring, Grafana Loki for log aggregation, Grafana Tempo for distributed tracing, OpenCost for cost analysis, and Alertsnitch for alert history. Features include an Alert-History Dashboard correlating alerts with Flux deployment events, GitOps correlation showing reconciliations in alert timelines, trace-to-metrics for service graphs, SSL monitoring, and cost-aware alerting. Installation requires Kubernetes, Helm 3.x, and optionally Flux CD.
+Transparent-Kube is a monitoring and observability stack for Kubernetes, bundling open-source tools into an integrated umbrella Helm chart for metrics, logs, traces, and costs within a single source of truth (Grafana). Key components include Kube-Prometheus-Stack for core monitoring, Grafana Loki for log aggregation, Grafana Tempo for distributed tracing, OpenCost for cost analysis, and Alertsnitch for alert history. Features include an Alert-History Dashboard correlating alerts with Flux deployment events, GitOps correlation showing reconciliations in alert timelines, trace-to-metrics for service graphs, SSL monitoring, and cost-aware alerting. Installation requires Kubernetes, Helm 3.x, and optionally Flux CD.
 
 ## 🏗 Architecture & Components
 
@@ -97,7 +97,7 @@ stringData:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: cluster-tamer-s3-creds
+  name: transparent-kube-s3-creds
   namespace: monitoring
 stringData:
   access-key: "ABC"
@@ -110,11 +110,11 @@ stringData:
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: GitRepository
 metadata:
-  name: cluster-tamer
+  name: transparent-kube
   namespace: flux-system
 spec:
   interval: 48h
-  url: https://github.com/ludicdrive/cluster-tamer
+  url: https://github.com/ludicdrive/transparent-kube
   ref:
     branch: main
 ```
@@ -134,32 +134,32 @@ spec:
       chart: ./
       sourceRef:
         kind: GitRepository
-        name: cluster-tamer
+        name: transparent-kube
         namespace: flux-system
 
   valuesFrom:
     - kind: Secret
-      name: cluster-tamer-s3-creds
+      name: transparent-kube-s3-creds
       valuesKey: access-key
       targetPath: loki.loki.storage.s3.access_key
     - kind: Secret
-      name: cluster-tamer-s3-creds
+      name: transparent-kube-s3-creds
       valuesKey: access-key
       targetPath: tempo.tempo.storage.trace.s3.access_key
     - kind: Secret
-      name: cluster-tamer-s3-creds
+      name: transparent-kube-s3-creds
       valuesKey: access-key
       targetPath: pyroscope.pyroscope.config.storage.s3.access_key
     - kind: Secret
-      name: cluster-tamer-s3-creds
+      name: transparent-kube-s3-creds
       valuesKey: secret-key
       targetPath: loki.loki.storage.s3.secret_key
     - kind: Secret
-      name: cluster-tamer-s3-creds
+      name: transparent-kube-s3-creds
       valuesKey: secret-key
       targetPath: tempo.tempo.storage.trace.s3.secret_key
     - kind: Secret
-      name: cluster-tamer-s3-creds
+      name: transparent-kube-s3-creds
       valuesKey: secret-key
       targetPath: pyroscope.pyroscope.config.storage.s3.secret_key
   values:
@@ -167,7 +167,7 @@ spec:
       s3:
         endpoint: s3.amazonaws.com
         region: eu-central-1
-        bucket: my-cluster-tamer-storage
+        bucket: my-transparent-kube-storage
     k8s-monitoring:
       cluster:
         name: flux-cluster
@@ -213,7 +213,7 @@ spec:
         storage:
           type: s3
           s3:
-            s3: s3://my-cluster-tamer-storage/loki
+            s3: s3://my-transparent-kube-storage/loki
             region: eu-central-1
 
     tempo:
@@ -222,7 +222,7 @@ spec:
           trace:
             backend: s3
             s3:
-              bucket: my-cluster-tamer-storage
+              bucket: my-transparent-kube-storage
               prefix: tempo
               endpoint: s3.amazonaws.com
 
@@ -232,7 +232,7 @@ spec:
           storage:
             backend: s3
             s3:
-              bucket: my-cluster-tamer-storage
+              bucket: my-transparent-kube-storage
               prefix: pyroscope
               endpoint: s3.amazonaws.com
             
