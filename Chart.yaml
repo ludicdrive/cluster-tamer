@@ -1,5 +1,5 @@
 apiVersion: v2
-name: cluster-tamer
+name: transparent-kube
 description: Custom Grafana Full Stack
 version: 1.0.12
 type: application
