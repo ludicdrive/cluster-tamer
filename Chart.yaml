@@ -1,7 +1,7 @@
 apiVersion: v2
 name: transparent-kube
 description: Custom Grafana Full Stack
-version: 1.0.12
+version: 1.0.13
 type: application
 home: https://github.com/ludicdrive/cluster-tamer
 maintainers:
