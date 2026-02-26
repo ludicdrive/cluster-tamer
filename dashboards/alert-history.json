@@ -56,7 +56,7 @@
       },
       "targets": [
         {
-          "expr": "ALERTS{alertname=~\"$alertname\", alertname!~\"InfoInhibitor\", alertstate=\"firing\"}",
+          "expr": "ALERTS{alertname=~\"$alertname\", alertname!~\"InfoInhibitor|KubeControllerManagerDown|KubeProxyDown|KubeSchedulerDown\", alertstate=\"firing\"}",
           "format": "time_series",
           "legendFormat": "{{alertname}} - {{severity}}"
         }
